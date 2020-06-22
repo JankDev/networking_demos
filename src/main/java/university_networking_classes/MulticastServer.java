@@ -18,13 +18,13 @@ public class MulticastServer {
 
     private List<Post> posts = new ArrayList<>();
     private final Gson gson = new Gson();
-    private final MulticastSocket socket;
+    private final DatagramSocket socket;
 
     public MulticastServer(int port) throws IOException {
-        this.socket = new MulticastSocket(port);
+        this.socket = new DatagramSocket(port);
     }
 
-    static class Post{
+    static class Post {
         int id;
         int userId;
         String title;
@@ -45,14 +45,16 @@ public class MulticastServer {
         fetchPosts();
 
         final InetAddress group = InetAddress.getByName("225.0.113.0");
+
         posts.forEach(post -> {
-            String json = gson.toJson(post);
-            byte[] buf = new byte[MAX_BUFFER_SIZE];
-            System.arraycopy(json.getBytes(),0,buf,0,json.getBytes().length);
-
-            DatagramPacket packet = new DatagramPacket(buf,0,buf.length,group,8080);
-
             try {
+                String json = gson.toJson(post);
+                byte[] buf = new byte[MAX_BUFFER_SIZE];
+                System.arraycopy(json.getBytes(), 0, buf, 0, json.getBytes().length);
+
+                DatagramPacket packet = new DatagramPacket(buf, 0, buf.length, group, 8080);
+
+
                 socket.send(packet);
                 Thread.sleep(100);
             } catch (IOException | InterruptedException exception) {
@@ -69,7 +71,7 @@ public class MulticastServer {
         var request = HttpRequest.newBuilder(URL).GET().build();
 
         posts = http.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> gson.<List<Post>>fromJson(response.body(), new TypeToken<List<Post>>(){}.getType()))
+                .thenApply(response -> gson.<List<Post>>fromJson(response.body(), new TypeToken<List<Post>>() {}.getType()))
                 .get();
     }
 
